@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temi 语音助手</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+        }
+
+        #controls-container {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            z-index: 2;
+        }
+
+        #voiceButton {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            margin-bottom: 10px;
+        }
+
+        #voiceButton.listening {
+            background-color: #f44336;
+        }
+
+        #status {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            white-space: pre-line;
+            max-width: 300px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="controls-container">
+        <button id="voiceButton">点击开始对话</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let currentEmotion = 'neutral'; // 当前表情状态
+
+        function setup() {
+            const canvas = createCanvas(400, 400);
+            canvas.parent('canvas-container');
+            frameRate(30);
+            noStroke();
+        }
+
+        function draw() {
+            background(255);
+            drawFace();
+        }
+
+        function drawFace() {
+            switch(currentEmotion) {
+                case 'happy':
+                    drawHappyFace();
+                    break;
+                case 'thinking':
+                    drawThinkingFace();
+                    break;
+                case 'neutral':
+                default:
+                    drawNeutralFace();
+                    break;
+            }
+        }
+
+        function drawHappyFace() {
+            // 绘制快乐的表情
+            fill(200, 200, 200);
+            ellipse(width/2, height/2, 300, 300); // 脸
+            fill(50);
+            ellipse(width/2 - 50, height/2 - 30, 40, 40); // 左眼
+            ellipse(width/2 + 50, height/2 - 30, 40, 40); // 右眼
+            noFill();
+            stroke(50);
+            strokeWeight(8);
+            arc(width/2, height/2 + 30, 120, 80, 0, PI); // 微笑
+            noStroke();
+        }
+
+        function drawThinkingFace() {
+            // 绘制思考的表情
+            fill(200, 200, 200);
+            ellipse(width/2, height/2, 300, 300); // 脸
+            fill(50);
+            ellipse(width/2 - 50, height/2 - 30, 40, 20); // 左眼
+            ellipse(width/2 + 50, height/2 - 30, 40, 20); // 右眼
+            noFill();
+            stroke(50);
+            strokeWeight(8);
+            arc(width/2, height/2 + 50, 80, 40, PI/4, 3*PI/4); // 思考的嘴
+            noStroke();
+        }
+
+        function drawNeutralFace() {
+            // 绘制中性表情
+            fill(200, 200, 200);
+            ellipse(width/2, height/2, 300, 300); // 脸
+            fill(50);
+            ellipse(width/2 - 50, height/2 - 30, 40, 40); // 左眼
+            ellipse(width/2 + 50, height/2 - 30, 40, 40); // 右眼
+            stroke(50);
+            strokeWeight(8);
+            line(width/2 - 40, height/2 + 40, width/2 + 40, height/2 + 40); // 中性的嘴
+            noStroke();
+        }
+
+        const ws = new WebSocket(`ws://${window.location.hostname}:8080`);
+        const voiceButton = document.getElementById('voiceButton');
+        const statusDiv = document.getElementById('status');
+
+        // 处理点击事件
+        voiceButton.addEventListener('click', () => {
+            ws.send(JSON.stringify({ action: 'startListening' }));
+            voiceButton.classList.add('listening');
+            currentEmotion = 'thinking'; // 开始听时显示思考表情
+        });
+
+        // WebSocket 连接状态处理
+        ws.onopen = () => {
+            console.log('WebSocket 连接已建立');
+            statusDiv.textContent = '准备就绪';
+            currentEmotion = 'neutral';
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket 错误:', error);
+            statusDiv.textContent = 'WebSocket 连接错误';
+            voiceButton.classList.remove('listening');
+            currentEmotion = 'neutral';
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket 连接已关闭');
+            statusDiv.textContent = 'WebSocket 连接已断开';
+            voiceButton.classList.remove('listening');
+            currentEmotion = 'neutral';
+        };
+
+        ws.onmessage = function(event) {
+            const response = JSON.parse(event.data);
+            if (response.type === 'status') {
+                statusDiv.textContent = response.text;
+            } else if (response.type === 'response') {
+                statusDiv.textContent = `你说: ${response.userText}\n机器人: ${response.botText}`;
+                voiceButton.classList.remove('listening');
+                currentEmotion = 'happy'; // 回答后显示开心表情
+                // 3秒后恢复中性表情
+                setTimeout(() => {
+                    currentEmotion = 'neutral';
+                }, 3000);
+            } else if (response.type === 'error') {
+                statusDiv.textContent = '发生错误，请重试';
+                voiceButton.classList.remove('listening');
+                currentEmotion = 'neutral';
+            }
+        };
+    </script>
+</body>
+</html> 

@@ -149,7 +149,7 @@ export default class Robot {
     }
 
     
-
+// temi的头部倾斜的角度，取值范围为 -25 ~ 55
     tilt(angle) {
         const message = {
             command: 'tilt',

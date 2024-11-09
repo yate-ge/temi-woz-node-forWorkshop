@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>趣味设计灵感捕捉器</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>趣味设计灵感捕捉器</h1>
+        <div class="camera-container">
+            <video id="video" autoplay playsinline></video>
+            <div class="overlay"></div>
+        </div>
+        <button id="captureButton">捕捉设计灵感</button>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <div id="result" class="result-container"></div>
+    </div>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+    <script src="background.js"></script>
+</body>
+</html>
