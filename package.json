@@ -1,0 +1,19 @@
+{
+  "name": "temi-woz-node-forworkshop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.16.0",
+    "uuid": "^9.0.1",
+    "express": "^4.18.3",
+    "dotenv": "^16.4.5"
+  }
+}
